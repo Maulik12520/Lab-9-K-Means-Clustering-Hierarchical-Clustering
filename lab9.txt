@@ -1,0 +1,59 @@
+# Lab-9: K-Means and Hierarchical Clustering
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score
+from scipy.cluster.hierarchy import linkage, dendrogram
+import matplotlib.pyplot as plt
+import pandas as pd
+
+iris = load_iris()
+X = iris.data
+feature_names = iris.feature_names
+
+X_scaled = StandardScaler().fit_transform(X)
+
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+kmeans_labels = kmeans.fit_predict(X_scaled)
+
+hierarchical = AgglomerativeClustering(n_clusters=3, linkage="ward")
+hierarchical_labels = hierarchical.fit_predict(X_scaled)
+
+print("Dataset shape:", X.shape)
+print("K-Means cluster sizes:", pd.Series(kmeans_labels).value_counts().sort_index().to_dict())
+print("K-Means inertia:", round(kmeans.inertia_, 3))
+print("K-Means silhouette score:", round(silhouette_score(X_scaled, kmeans_labels), 3))
+print("Hierarchical cluster sizes:",
+      pd.Series(hierarchical_labels).value_counts().sort_index().to_dict())
+print("Hierarchical silhouette score:",
+      round(silhouette_score(X_scaled, hierarchical_labels), 3))
+
+X_2d = PCA(n_components=2, random_state=42).fit_transform(X_scaled)
+
+plt.figure(figsize=(7, 4.5))
+plt.scatter(X_2d[:, 0], X_2d[:, 1], c=kmeans_labels, cmap="viridis",
+            edgecolor="black", linewidth=0.3)
+plt.title("K-Means Clustering (PCA projection)")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.tight_layout()
+plt.show()
+
+Z = linkage(X_scaled, method="ward")
+plt.figure(figsize=(8, 4.8))
+dendrogram(Z, truncate_mode="lastp", p=25, leaf_font_size=8)
+plt.title("Hierarchical Clustering Dendrogram")
+plt.xlabel("Cluster / sample groups")
+plt.ylabel("Euclidean distance")
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(7, 4.5))
+plt.scatter(X_2d[:, 0], X_2d[:, 1], c=hierarchical_labels, cmap="plasma",
+            edgecolor="black", linewidth=0.3)
+plt.title("Hierarchical Clustering (PCA projection)")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.tight_layout()
+plt.show()
